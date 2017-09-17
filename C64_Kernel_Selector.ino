@@ -61,7 +61,10 @@ void setup()
   pinMode(EPROM_A13, OUTPUT);
   pinMode(EPROM_A14, OUTPUT);
   pinMode(EPROM_A15, OUTPUT);
-  
+  digitalWrite(EPROM_A13, LOW);
+  digitalWrite(EPROM_A14, LOW);
+  digitalWrite(EPROM_A15, LOW);
+ 
   // Select bank 0 as default if no value in EEPROM
   if(defaultBank < 0 || defaultBank > 7)
   {
@@ -70,10 +73,9 @@ void setup()
   }
 
   delay(20);
-
   int bank = ReadC64Keys();
-  
   SelectBank(bank);
+  delay(100);
 
   // Finally boot the C64
   digitalWrite(C64_RESET, HIGH); // Pull the C64 reset line HIGH, so it's able to exit reset state
@@ -219,7 +221,7 @@ void ResetC64()
 {
   pinMode(C64_RESET, OUTPUT);
   digitalWrite(C64_RESET, LOW);
-  delay(2);
+  delay(200);
   digitalWrite(C64_RESET, HIGH);
   pinMode(C64_RESET, INPUT); //Set as Input so any external reset doesn't drive against the AVR pin
 }
