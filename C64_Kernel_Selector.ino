@@ -22,8 +22,9 @@
 #define EPROM_A14       A1  // PC1
 #define EPROM_A15       A2  // PC2
 
-// C64 reset pin
+// C64 reset pin & EXROM
 #define C64_RESET       3   // PD3
+#define EXROM           4   // PD4
 
 // Key input pins
 #define KEY_RESTORE     2   // PD2
@@ -48,9 +49,9 @@ char keys[ROWS][COLS] = {
 
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
-// Read default kernel from internal EEPROM at address 0
+
 int address = 0;
-int defaultBank = EEPROM.read(address);
+int defaultBank;
 
 void setup()
 {
@@ -61,10 +62,10 @@ void setup()
   pinMode(EPROM_A13, OUTPUT);
   pinMode(EPROM_A14, OUTPUT);
   pinMode(EPROM_A15, OUTPUT);
-  digitalWrite(EPROM_A13, LOW);
-  digitalWrite(EPROM_A14, LOW);
-  digitalWrite(EPROM_A15, LOW);
- 
+
+  // Read default kernel from internal EEPROM at address 0
+  defaultBank = EEPROM.read(address); 
+  
   // Select bank 0 as default if no value in EEPROM
   if(defaultBank < 0 || defaultBank > 7)
   {
@@ -72,17 +73,14 @@ void setup()
     defaultBank = 0;
   }
 
-  delay(20);
+  //delay(20);
   int bank = ReadC64Keys();
   SelectBank(bank);
-  delay(100);
+  delay(200);
 
   // Finally boot the C64
-  digitalWrite(C64_RESET, HIGH); // Pull the C64 reset line HIGH, so it's able to exit reset state
-  pinMode(C64_RESET, INPUT); //Set as Input so any external reset doesn't drive against the AVR pin
-
-  // Interrupt for reset button on the C64
-  //attachInterrupt(digitalPinToInterrupt(C64_RESET), Reset, FALLING);
+  //digitalWrite(C64_RESET, HIGH); // Pull the C64 reset line HIGH, so it's able to exit reset state
+  pinMode(C64_RESET, INPUT); // Set as Input so any external reset doesn't drive against the AVR pin
 }
 
 // Read keys
@@ -212,18 +210,27 @@ void SelectBank(int bank)
   defaultBank = bank;           // Set defaultBank to the selected bank
 }
 
-void Reset()
+void ColdReset()
 {
-  asm volatile ("  jmp 0");
+  pinMode(C64_RESET, OUTPUT);
+  pinMode(EXROM, OUTPUT);
+  digitalWrite(C64_RESET, LOW);
+  digitalWrite(EXROM, LOW);
+  delay(200);
+  digitalWrite(C64_RESET, HIGH);
+  delay(300);
+  digitalWrite(EXROM, HIGH);
+  pinMode(C64_RESET, INPUT); // Set as Input so any external reset doesn't drive against the AVR pin
+  pinMode(EXROM, INPUT);
 }
 
-void ResetC64()
+void WarmReset()
 {
   pinMode(C64_RESET, OUTPUT);
   digitalWrite(C64_RESET, LOW);
   delay(200);
   digitalWrite(C64_RESET, HIGH);
-  pinMode(C64_RESET, INPUT); //Set as Input so any external reset doesn't drive against the AVR pin
+  pinMode(C64_RESET, INPUT); // Set as Input so any external reset doesn't drive against the AVR pin
 }
 
 void loop()
