@@ -49,7 +49,6 @@ char keys[ROWS][COLS] = {
 
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
-
 int address = 0;
 int defaultBank;
 
